@@ -1,0 +1,551 @@
+express is minimal node framework a higher level of abstraction
+it contains very robust features like complex routing easier handling of requests and responses 
+express makes it easier to organise our application into MVC architecture which is very popular software architechture.
+
+//APIS on  a higher level and rest architecture
+
+API is a piece of software that can be used by other softwares to allow applications to talk to each other.
+
+we can say node file system or http are small pieces of software we can interact with them by using their api 
+for eg we use readFile of fs basically using the fs api 
+thats why we say term node apis
+
+for eg in java when we create classes and call methods these methods will be apis created from that class.
+
+REST ARCHITECTURE
+
+It is a way of building apis in a logical way making them easy to consume.
+following procedure:
+
+1)Seperate api into logical resources, these resources should then be exposed which means should be made available to structured,
+resource based URLs to perform actions like reading,deleting etc
+
+2) Use right http methods.
+
+3) send data as json
+
+4) must be stateless
+
+Resource 
+
+Object or representation of something which has data associated to it.any information that can be named can be a resource
+
+we need to design url's to which data can be sent. API will have many endpoints that will perform actions.
+so to gettours instead of gettours we can write tours 
+it is advised to use resource name only in plural in the url.
+
+for updating the object a put or patch request should be made.
+in put entire object is sent
+while in patch only changed object should be sent
+
+any unique id should be a part of the url 
+
+json is lightweight data interchange platform.
+
+handling requests 
+
+app.get('/', (req, res) => {// when a get method is called
+    these req and res are slightly different from that in node they have more methods attached to them
+   // res.status(200).send('Hello from the server side')
+    we can also send json 
+    res.status(200).json({ message: 'Hello from the server side', app: 'tour-and-travel' });
+})
+we do read file before not in the callback
+
+***FOR POST REQUEST***
+
+app.use(express.json);
+
+this express.json here is a middleware.A middleware is a function taht can modify the incoming request data.It is called middleware because it stands in the middle of request and response.So,its just a step that a request goes through while its still in process.
+The step that a request goes through is simply that data from the body is added to it.So its added to the req object.
+we use app.use to use middleware.
+
+app.post('/app/v1/tours', (req, res) => {
+    console.log(req.body);
+    res.send('done')
+})
+
+body is the property that is gonna be available on the request because we used that middleware 
+we always need to send a response in order to complete the req-response cycle.
+
+now after post req and after printing req.body which we get in the form of js object let's try adding our data to the json filr.
+**MIDDLEWARE**
+In the context of Node.js, middleware refers to functions or modules that have access to the request and response objects within the application's HTTP processing pipeline. Middleware functions in Node.js are executed in the order they are defined, and each middleware has the ability to modify the request or response, terminate the request-response cycle, or pass control to the next middleware in the stack.
+expres.json
+When you use this middleware in your Express application, it automatically parses the incoming request payload, assuming it is in JSON format, and attaches the parsed data to the request object under req.body.
+
+here is how we will do it 
+app.post('/api/v1/tours', (req, res) => {
+    // console.log(req.body);
+    const newId = tours[tours.length - 1].id + 1;
+    const newTour = { ...req.body, id: newId }
+    tours.push(newTour);
+    fs.writeFile(`${__dirname}/dev-data/data/tours-simple.json`, JSON.stringify(tours), err => {
+        res.status(201).json({
+            status: 'success',
+            data: {
+                tour: newTour
+            }
+        })
+    });
+    //we can also do above by Object.assign({id:newId},req.body)
+    // res.send('done');
+})
+
+we will obv use write file and not writeFileSync as we are in the event loop since all the callbacks will be executed in the event loop and we can never ever block the event loop.this is gonna happen in the background and as soon as it is ready it will be put in one of the event queues which is then gonna be handled as soon as the event loop passes that phase.
+
+
+**RESPONDING TO URL PARAMETERS**
+we will specify an id in url to get a specific tour
+
+app.get('/api/v1/tours/:id', (req, res) => {
+    console.log(req.params) // will tell the parameters in the url
+    //here the value of key id would be in the form of string so we would hv to convert it
+    //below code will convert it to a number
+    const id = req.params.id * 1;
+    const tour = tours.find(el => el.id === id)
+    res.status(200).json({
+        status: 'success',
+        results: tours.length,
+        data: {
+            tours: tours
+        }
+    });
+});
+
+***PATCH REQUEST***
+
+***DELETE REQUEST***
+
+***REFACTORING OUR ROUTES***
+routes should be kind of together and handling functions as well
+as of now its difficult to see all routes together.
+so let's put all the callbacks into their own functions.
+
+after that we will get :->
+app.get('/api/v1/tours', getAllTours);
+app.get('/api/v1/tours/:id', getTour);
+app.post('/api/v1/tours', createTour)
+app.patch('/api/v1/tours/:id', updateTour)
+app.delete('/api/v1/tours/:id', deleteTour)
+
+while the entire code will be in these functions
+
+now since lets say we want to update the version of route we can't do it again and again so 
+app.get('/api/v1/tours', getAllTours);
+this part can be written as 
+
+app
+    .route('/api/v1/tours')
+    .get(getAllTours)
+    .post(createTour)
+
+app
+    .route('/api/v1/tours/:id')
+    .patch(updateTour)
+    .delete(deleteTour)
+
+    **THEORY REQUEST RESPONSE CYCLE**
+
+    express app receives a request when someone hits the server for which it will create a request and response. 
+    TO PRocess data we use middleware to manipulate any request or response object.
+    we use express.json to get access to request body.
+    it is a function executed between receiving a request and giving response.
+    eg express.json
+    
+    All the middleware we use is called middleware stack.Order of the middleware stack is the way it is defined in the code.
+    the middleware that appears first is executed earlier than the later ones.
+    therefore order of code matters alot in express.
+
+parsing,logging
+    You can think like our req and response object will go each middleware in the middleware stack whre they are processed.
+    or where just some other code is executed.Then at the end of each middleware function a next function is called the function taht we have access to in each middleware.
+    when next is called the next middleware is executed.
+    This whole process maybe like a pipeline.
+    The last middleware is generally route handler.No next function called instead the response is sent back to the client.
+
+    ***CREATING OUR OWN MIDDLEWARE***
+
+    app.use -> we use this function to add to middleware stack
+    express.json() returns a function that we want to add to middleware stack
+
+    
+app.use((req, res, next) => {
+    console.log("Hello from the middleware")
+    next();
+})
+next is used to call the next function in the middleware stack
+
+
+middleware apply to every single request
+to use middleware it should be put before the route handler
+
+next we
+const tourRouter = express.Router();
+const userRouter = express.Router();
+
+app.use('/api/v1/tours', tourRouter);
+app.use('api/v1/users', userRouter);
+
+router
+    .route('/')
+    .get(getAllUsers)
+    .post(createUser)
+
+router
+    .route('/:id')
+    .get(getUser)
+    .patch(updateUser)
+    .delete(deleteUser)
+
+only put aage ka url in router.route() now
+
+Install morgan middleware
+check documentation of morgan to know more abt what it does
+
+MOUNTING MULTIPLE ROUTERS
+
+so we create userRoutes,tourRoutes and put all the code there
+all the relevant code with their methods in seperate files and make sure to export those files
+next, we need to import these modules 
+
+next we create tourControllers and userController and put all the method definitions there
+now we need to export method definitions 
+
+since there are more than one methods instead of using module.exports we will replace all const of methods with exports
+
+now while importing we write 
+const tourController = require('./../controllers/tourController.js')
+and while calling methods we write tourController.getAlltours
+
+now we can also import in this way
+const {getAlltours,getTour,.....} = require() actual names basically
+
+next,we also create a server.js file
+and server info in that file
+we need to export app.js
+now server.js will be the entry point
+
+nodemon server.js
+
+now in package.json
+go here 
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+
+and update this to
+
+ "scripts": {
+    "start": "nodemon server.js"
+  },
+
+now u just have to write npm start
+
+for accessing the parameters in the url
+
+router.param('id', (req, res, next, val) => {
+    console.log(`Tour id is: ${val}`);
+    next();
+});
+
+now we are checking id everytime which is a repeated code, to avoid repetition of code we can create a middleware 
+
+exports.checkID = (req, res, next, val) => {
+    console.log(`Tour id is: ${val}`);
+    const id = req.params.id * 1;
+    if (id > tours.length) {
+        return res.status(404).json({
+            status: 'fail',
+            message: 'Invalid Id'
+        });
+    }
+    next();
+}
+
+and now in tourRoutes 
+
+router.param('id', tourController.checkID);
+
+write like this
+
+try to use more middlewares
+
+Now similarly we can create a CheckBody middleware , check if body contains name and price property if not send 400 status code back
+
+Let's now learn how to serve static files with Express.
+Now what do I actually mean with static files?
+Well, it's the files that are sitting in our file system
+that we currently cannot access using all routes.
+So, for example, we have this overview.html file here in our public folder.
+But right now there's no way that we can access this using a browser, right?
+And the same for these image files that we have here,or the CSS or the Javascript files.
+
+So we can, of course, not just write public and then, for example,
+overview.html, right?
+There's no way we can access this right now.And that's simply because we didn't define any route
+for this URL, right?We do not have any handler that is associated to this route.
+And so, if we actually want to access something from our file system,we need to use a built-in Express middleware.
+
+app.use(express.static(`${__dirname}/public`));
+built-in express middleware
+
+ENVIRONMENT VARIABLES
+
+By default the env is set to devlopment,
+you can check it using app.get('env)
+console.log(process.env)
+we can alsos et passwords and usernames using environment variables.It is not convenient to write env variables in the command we run to start application so we create config.env file where we define the env variables and we can also put sensitive information like username and password.
+variable names should always be in upper-case
+
+Now how do we connect this env to our backend?
+we use package dotenv
+so download and package and on the top of server.js (new entry point) we write 
+
+in the same file write 
+dotenv.config({ path: './config.env' })
+
+check how to do in production in the last part of the video
+
+MONGO-DB
+In mongo, each database can have one or more collections(tables).Each collection can contain one or more documents,
+(row in relational).
+
+-->Mongo-db is a document database with scalability and flexibility that you want with the querying and indexing you need.
+
+-->data stored in documents (field-value pair data structures)
+
+-->very easy to distribute data among multiple machines as your users and amount of data grow.
+
+-->no document data schema required so each document can have different number and type of fields.
+
+-->Very performant due to features like embedded data models,indexing,sharding
+
+-->MongoDB uses BSON data fromat for storing documents (similar to JSON but in BSON all values are typed that is all values have a data type)
+
+In MongoDb we can have multiple values of a field,
+we can embedd a document into other ,And this makes a database more performant in some situations because this way,
+it can be easier to read all the data that we need all at once.
+two more things about BSON documents.
+
+First, the maximum size for each document is currently 16 MB, but this might increase in the future.
+And second, each document contains a unique ID,which acts as a primary key of that document.
+It's automatically generated with the object ID data type each time there is a new document,
+and so we don't have to worry about it.
+
+download compass
+Creating remoted database hosted on MongoDB Atlas.
+
+So Atlas is a so-called database as a service provider which takes all the pain of managing and scaling databases away from us.
+So that already is a huge advantage for us but it's also extremely useful to always have our data
+basically in the Cloud, because this way we can develop our application from everywhere
+and, even more importantly, we don't have to export data from the local database and then upload it
+to a hosted database, once we are ready to deploy our application.So instead we simply use this hosted database
+right from the beginning, instead of even messing with local databases in the first place, all right?
+
+create project using atlas
+
+Connectng to our hosted database 
+Now another thing that we can and should do,is to allow access from everywhere to this cluster.
+So remember how right in the beginning of this video we whitelisted our IP in order to grant access
+to our current computer to this cluster.
+But if you happen to switch computers during development,you might need to whitelist the IP of that computer as well,
+because otherwise you might not be able to connect.But since we're not really dealing with sensitive data here
+anyway, we can simply whitelist every single IP in the world and allow access from everywhere.
+
+go to network access and choose allow from everywhere after clicking edit
+
+commands->
+
+show dbs (showing all databases)
+use db_name (for using database with name db_name)
+
+Atlas atlas-wdpo49-shard-0 [primary] test> show dbs
+tour-and-travel   40.00 KiB
+admin            264.00 KiB
+local             29.40 GiB
+Atlas atlas-wdpo49-shard-0 [primary] test> use tour-and-travel
+switched to db tour-and-travel
+Atlas atlas-wdpo49-shard-0 [primary] tour-and-travel> db.tours.find()
+[
+  {
+    _id: ObjectId('658d48fe093a30b262367e8a'),
+    name: 'The Forest Hiker',
+    price: 297,
+    rating: 4.7
+  }
+]
+the above document is the one we added
+
+**Using MongoDb with Mongoose**
+
+So, now it's finally time to connect the MongoDB database that we created with our Express application.
+And, the first step in doing that is to actually get our connection string from Atlas.
+So, just like we did before when we connected the database to Compass and to the Mongo Shell,
+we need to get our connection string in order to connect the application to this hosted database.
+
+Now among 3 options after clicking connect on cluster choose connect to application
+now in the environment variables created create an env variable DATABASE=string
+
+Next up, we need to install a MongoDB driver,so basically a software that allows our Node code
+to access and interact with a MongoDB database.And, there are a couple of different MongoDB drivers,
+but we're gonna use the one that I would say is the most popular one,which is called Mongoose, which adds a couple of features
+to the more native MongoDB driver.
+
+for connecting to database 
+
+mongoose.connect(DB, {
+    useNewUrlParser: true
+    useCreateIndex: true,
+    useFindAndModify: false
+}).then((con) => {
+    console.log(con.connections);
+    console.log("DB connection successfully established")
+}).catch((err) => {
+    console.log(err);
+});
+
+now lets delete all existing collections,drop on atlas
+
+What is mongoose?
+
+Well, Mongoose is an object data modeling library for MongoDB and Node JS,
+And by the way, an object data modeling library is just a way for us to write JavaScript code
+that will then interact with a database.So, we could just use a regular MongoDB driver to access our database, and it would work just fine,but instead we use Mongoose,because it gives us a lot more functionality out of the box,
+So, some of the features Mongoose give us is schemas to model our data and relationship,
+easy data validation, a simple query API,middleware, and much more.In Mongoose, a schema is where we model our data,
+so where we describe the structure of the data,default values, and validation.
+We then take that schema and create a model out of it.And the model is basically a wrapper around the schema, which allows us to actually interface with the database in order to create, delete, update,and read documents.
+
+Creating a simple tour model:->
+
+model is a like a blueprint of documents.
+so we need a mongoose model,for that we need schema.make a very simple schema for our tours.So, let's say tourSchema
+is a new mongoose.Schema.
+Add that in here we actually pass our schema as an object.
+
+const tourSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: [true, 'A tour must have a name'],
+        unique: true
+    },
+    rating: {
+        type: Number,
+        default: 4.5
+    },
+    price: {
+        type: Number,
+        required: [true, 'A tour must have a price']
+    }
+
+});
+
+For example, this required here,this is actually something called a validator
+because it is used to validate our data.
+In this case, simply to validate if the name is actually there.(hence for data validation).
+
+thats how we create a schema.now lets create model
+
+const Tour = mongoose.model('Tour', tourSchema);
+
+creating documents and testing the model
+So, this is, again, a new documentthat we created out of a tour model,or function constructors,
+and so as I said before, this is kinda using JavaScript function constructors.
+const testTour= new Tour({
+    name: "The Forest Hiker",
+    rating: 4.7,
+    price: 497
+});
+
+So we can now say testTour.save,and this will then save it to
+he tours collection in the database, okay,and it's really as simple as that.
+So again, we have our document instance which is testTour, and on there
+we can then call the save method in order to save the document to the database.
+Now this save here will then return a promise that we can then consume.
+
+So for now, let's use then for that,and in the future, we will actually use
+async await in order to consume these promises,but for now, let's keep it simple
+and not create any more functions,and so instead, we're just using
+the then method here.
+
+**MVC ARCHITECTURE**
+
+model,view,controller
+model->business logic
+view->presentation logic
+controller->application logic
+
+the model layer is concerned with everything about applications data,and the business logic.
+And we're going to learn what business logic means in the next slide.Next up, we have the controller layer
+and the function of the controllers is to handle the application's request,interact with models,and send back responses to the client.And all that is called the application logic.Finally, the view layer is necessary if we have a graphical interface in our app.Or in other words, if we're building a server-side rendered website,as we talked about before.In this case, the view layer consists basically of the templates used to generate the view,so the website that we're going to send back to the client.
+
+
+
+So using a pattern, or an architecture like this allows us to write a more modular application,
+which is going to be way easier to maintain in scale.
+
+So as always, it all starts with a request.That request will hit one of our routers,Now the goal of the router is to delegate the request to the correct handler function,which will be in one of the controllers.
+
+Then, depending on the incoming request,the controller might need to interact
+with one of the models,for example to retrieve a certain document from the database,
+or to create a new one.Once more, there is one model file for each resource.
+
+In this case, after getting the data from the model,the controller will then select one of the view templates and inject the data into it.That rendered website will then be sent back
+as the response.
+
+
+So, one of the big goals of MVC is to separate business logic from application logic.So again, application logic
+is the logic that makes the app actually work.For example, a big part of application logic in Express,
+is all about managing requests and responses.So, in a sense, we can also say that application logic is more about technical stuff.
+buss logic
+it's all the code that actually solves the business problem
+But we should do our best efforts to keep the application logic in our controllers and business logic in our models.
+
+And there is even this philosophy of fat models, thin controllers,which says we should offload
+as much logic as possible into the models,to keep the controllers as simple and lean as possible.
+
+Refactoring for MVC
+create models folder
+copy the 
+const tourSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: [true, 'A tour must have a name'],
+        unique: true
+    },
+    rating: {
+        type: Number,
+        default: 4.5
+    },
+    price: {
+        type: Number,
+        required: [true, 'A tour must have a price']
+    }
+
+});
+
+const Tour = mongoose.model('Tour', tourSchema);
+
+to tourModel.js
+
+remove below code as it was just for testing purposes
+
+const testTour = new Tour({
+    name: "The Park Camper",
+    price: 997
+});
+
+testTour.save().then(doc => {
+    console.log(doc);
+}).catch(err => {
+    console.log('ERROR  ', err);
+});
+
+now in tourController import the tour model
+and remove the code 
+ const tours = JSON.parse(fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`))
+ no longer needed a file and all the tours code 
+
+ remove this code 
+
