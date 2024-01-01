@@ -549,3 +549,107 @@ and remove the code
 
  remove this code 
 
+ Another way of creating documents instead of prev way of  
+ const testTour = new Tour({
+    name: "The Park Camper",
+    price: 997
+});
+we can call directly the create method on Tour in tourController
+now instead of using then() on promises we will use async await make the method async and then you can await for result
+tour.create will return the promise we await the promise
+
+try creating tour , all those fields that are not a part of schema won't be added to the schema.however all the fields part of the schema should be present in the request body.
+
+for get getAllTours
+const tours = await Tour.find();
+    res.status(200).json({
+        status: 'success',
+        results: tours.length,
+        data: {
+            tours
+        }
+    });
+
+      await Tour.findById(req.params.id); id here because in the router we use :id so same name
+      if not findById(req.params.id) we can also use findOne({_id:req.params.id})
+
+for exporting 
+
+exports.updateTour = async (req, res) => {
+
+    try {
+        const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true
+        });
+        res.status(200).json({
+            status: 'success',
+            data: {
+                tour
+            }
+        })
+    } catch (err) {
+        res.status(400).json({
+            status: 'fail',
+            message: 'Invalid data sent'
+        })
+    }
+
+}
+
+fs.readFileSync('tours-simple.json', 'utf-8');
+the above is json 
+in import-dev-data.js
+DB connection successfully established
+PS C:\Users\SRISHTI\Desktop\Tour-and-Travel>
+PS C:\Users\SRISHTI\Desktop\Tour-and-Travel> node "c:\Users\SRISHTI\Desktop\Tour-and-Travel\dev-data\data\import-dev-data.js" --delete
+[
+  'C:\\Program Files\\nodejs\\node.exe',
+  'c:\\Users\\SRISHTI\\Desktop\\Tour-and-Travel\\dev-data\\data\\import-dev-data.js',
+  '--delete'
+]
+DB connection successfully established
+Data successfully deleted !!
+
+#MAKING API BETTER
+
+#FILTERNG
+
+In mongoose 2 ways,
+  const tours = await Tour.find({
+            duration: 5,
+            difficulty: 'easy'
+        }); first way
+
+
+        second way 
+
+  const tours = await Tour.find().where('duration').equals(5).where(difficulty).equals('easy');
+
+  we can have .lt() less than in advanced filtering 
+  gte,gt,lte,lt
+
+   //build query
+        //filtering
+        const queryObj = { ...req.query };
+        const excludedFields = ['page', 'sort', 'limit', 'fields']
+        excludedFields.forEach(el =>  delete queryObj[el] );
+        console.log(req.query);
+
+        // Advanced Filtering
+        let queryStr = JSON.stringify(queryObj);
+        queryStr = queryStr.replace(/\b(gte|gt|lt|lte)\b/g, match => `$${match}`);
+        console.log(JSON.parse(queryStr));
+
+        const query = Tour.find(JSON.parse(queryStr));
+    query:127.0.0.1:3000/api/v1/tours?duration[gte]=5&difficulty=easy
+
+//SORTING
+
+for limiting 
+127.0.0.1:3000/api/v1/tours?sort=price,ratingsAverage
+
+for pagination
+
+page=2&limit=10;
+query=query.skip(10).limit(10) //skip 10 results
