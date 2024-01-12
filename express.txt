@@ -653,3 +653,149 @@ for pagination
 
 page=2&limit=10;
 query=query.skip(10).limit(10) //skip 10 results
+
+
+
+#REFACTORING APIS
+#MONGODB AGGREGATION PIPELINE
+And the idea is that we basically define a pipeline that all documents from a certain collection go through
+where they are processed step by step in order to transform them into aggregated results.For example, we can use the aggregation pipeline in order to calculate averages or calculating minimum and maximum values or we can calculate distances even.
+
+So this one is the match stage, all right?
+And as I mentioned, it's really just a query.And so let's say that for starters,we only want to select documents
+which have a ratings average greater or equal than 4.5.So can you do that?
+
+And this group here is where the real magic happens because as the name says,
+it allows us to group documents together,basically using accumulators.And an accumulator is for example,
+even calculating an average.So if we have five tours, each of them has a rating,we can then calculate the average rating using group.
+
+id is basically for every id you get different metrics grouped by them
+
+#AGGREGATION PIPELINING:UNWINDING AND PIPELINING
+
+basically we create monthly plan based on start dates.Because remember, we want to count how many tours there are for each of the months in a given year.
+And what unwind is gonna do is basically deconstruct an array field from the info documents and then output one document for each element of the array.
+so basically lets say a document had an array of startdates with 3 elements in it. So now 3 documents will be created with just unwind having startdates as each of those elements.
+
+#VIRTUAL PROPERTIES:
+All right, now virtual properties are basically fields that we can define on our schema but that will not be persisted.
+So they will not be saved into the database.
+Okay, so let's now define a virtual property that contains the tour duration in weeks.And so that's a field basically
+that we can very easily convert from the duration that we already have in days, right?
+
+Just like Express,Mongoose also has the concept of middleware.And so let's now learn about the first type of middleware, which is document middleware.
+For example, each time a new document is saved to the database, we can run a function between the save command is issued and the actual saving of the document, or also after the actual saving.And that's the reason why Mongoose middleware is also called pre and post hooks.So again, because we can define functions to run before or after a certain event.
+
+And in this lecture, we're gonna talk about document middleware, which is middleware that can act on the currently processed document.So just like the virtual properties,we define a middleware on the schema,so tourSchema.pre .And so this is for pre middleware, which again,is gonna run before an actual event.And that event in this case is the save event.
+And so this call back function that we're gonna define here next,so function so this function will be called before an actual document is saved to the database.
+So it runs before the save command and the .create command.But not on insert many.So if we use this command here, so insertMany,
+then that will actually not trigger the save middleware.
+
+So down here in our middleware function.And what I wanna do here is to create a slug for each of these documents.
+So remember how in the first section,we created a slug for each of the products that we had in the store.
+And so a slug is basically just a string that we can put in the URL, usually based on some string like the name.
+So in this case, we're gonna create a slug based here on the tour name.So remember how for that we used the slugify package.
+And so let's now go ahead and install that.
+
+Now in this case, we only have one middleware function,which is why we didn't run into any problems,even not calling next, but let's actually now do that.And so each middleware function, in a pre save middleware has access to next.So that's exactly the same as in Express,and so by the end of the middleware we call next,and that will then call the next middleware in the stack.
+So let's try this out again.And this is gonna be called test tour number two.Very simple, send to sky,and let's wait for it.
+And now for some reason, it's not really here.Let's see if we got some error,and we actually did not.
+But the reason why it's not working is that right now we don't have any slug in our schema.And remember this actually happened to us before when we only had a couple of fields in the schema.And when we, then we'll define some fields that were not in the schema, then they were simply not persisted to the database.And the same thing is now happening here,so we defined the slug property, but it's not in our schema.
+And therefore it was then not saved to the database,and so let's quickly fix that and let's put it,
+oh, I don't know, it doesn't really matter,
+can put it here right after the name,so the slug should simply be a string.
+And so that should fix it.
+
+Let's now just very quickly experiment, also,with a post middleware.
+So tourSchema.post and let's use save again.And then the callback function,which in the case of post middleware
+has access not only to next, but also to the document that was just saved to the database.So let's call that one doc and then next.And so post middleware functions are executed after all the pre middleware functions have completed, all right.
+So in here we actually no longer have the disk keyword,but instead we have the basically finished document here in doc.So let's just log that finished document to the console and then call next.Now in this case again, we only have one
+post middleware and so we wouldn't really need next,but it's a best practice to simply always include it.
+Now another thing that I wanted to show you is that we can have, of course, multiple pre middlewares or also post middlewares for the same hook.And hook is what we call this save here.So this middleware here is basically what we call
+a pre save hook.
+
+if we don't call next in the middleware function we will be stuck
+
+this will point at the document
+
+QUERY MIDDLEWARE
+
+will be pointing at the query and not the document
+let's say we can have secret tours only for vips and we don't want those turs to be shown in the result.
+so we start by adding secretTour field in the schema
+
+but for checking a particular tour by id 
+
+tourSchema.post(/^find/, function(docs, next) {
+  console.log(`Query took ${Date.now() - this.start} milliseconds!`);
+  next();
+});
+
+we write regular expression for find so that all the strings starting with find the above middleware is applicable.
+So find, as we just specified,and now, with our regular expression,it's also gonna run for find1,findOneAndDelete, findOneAndRemove.
+
+we can also define any property so we define this.start
+tourSchema.pre(/^find/, function(next) {
+  this.find({ secretTour: { $ne: true } });
+
+  this.start = Date.now();
+  next();
+});
+
+So we learned about Document and query middleware, and now the last middleware that we're gonna talk about is aggregation middleware,and as you can probably guess,aggregation middleware allows us to add hooks before or after an aggregation happens,
+and so let's now actually continue with our previous example where we did hide the secret tours from the queries, now in an aggregation the secret tours are still being used, right?So let's quickly confirm that actually,for example here in our gets tour stats,so that's where we used the first aggregation and so you see we have four tours here,four in easy, and three in medium
+and so that makes 11 but we already know that we actually only want 10 tours.So there are 10 tours that are not secret,
+and one that is secret, and so now we get all these 11 tours here and so basically we also want to exclude the secret tour in the aggregation.So how could we do that?Well let's take a look at where our aggregation is actually happening so it's down here in yeah,so in get tour steps, and so what we could do is to here in this match state simply exclude the secret tours
+that are true right?So that would be quite easy to add here,but then we would have to add the same thing down here in the other aggregation that we have,and if we had even more aggregations we would then have to add that in all of them and that's of course
+not a good idea, because for example we could forget.
+
+this.pipeline() gives us the aggregation pipeline
+this.pipeline() is array
+
+We use unshift and so that is a standard JavaScript method for arrays okay, we have also shift to add at the end of the array and unshift at the beginning of the array, and so again what we want to add here now is to add just another stage, so very similar to what we have down here.So match and then secretTour, not equal to true.Give it a save, and so this piece of code here basically is exactly what we have up here right?Basically removing from the output all the documents that have secretTour set to true, right?
+
+we can have as many match stages as we want
+
+#DATA VALIDATION AND BUILT IN VALIDATORS
+
+Now, what exactly does validation actually mean?Well, validation is basically checking if the entered
+values are in the right format for each field in our document schema, and also that values
+have actually been entered for all of the required fields.Now, on the other hand, we also have sanitization,
+which is to ensure that the inputted data is basically clean, so that there is no malicious code
+being injected into our database,or into the application itself.So, in that step we remove unwanted characters,
+or even code, from the input data, all right?And this is actually a crucial step, like,a golden standard in back-end development.
+To never, ever accept input data coming from a user as it is.So, we always need to sanitize that incoming data.
+
+is because of the fat model and thin controller philosophy,we make changes in model.
+
+ validate: {
+        validator: function(val) {
+          // this only points to current doc on NEW document creation
+          return val < this.price;
+        },
+        message: 'Discount price ({VALUE}) should be below regular price'
+      }
+
+we can validate on our own
+
+we have validator library as well
+
+ name: {
+      type: String,
+      required: [true, 'A tour must have a name'],
+      unique: true,
+      trim: true,
+      maxlength: [40, 'A tour name must have less or equal then 40 characters'],
+      minlength: [10, 'A tour name must have more or equal then 10 characters']
+      // validate: [validator.isAlpha, 'Tour name must only contain characters']
+    },
+
+    thats how we add
+
+# ERROR HANDLING WITH EXPRESS
+npm i ndb --global
+
+scope->all variables
+
+HANDLING UNHANDLES ROUTES
+make a handler function for unhandled routes
