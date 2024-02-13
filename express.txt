@@ -799,3 +799,157 @@ scope->all variables
 
 HANDLING UNHANDLES ROUTES
 make a handler function for unhandled routes
+go to app.js
+here we add middleware after route handlers which will only execute incase not handled by above route handlers.
+app.all('*', (req, res, next) => {
+    res.status(404).json({
+        status: 'fail',
+        message: `Can't find ${req.originalUrl} on this server!`
+    })
+})
+
+Operational errors
+Problems we predict that will happen at some point so we just handle them in advance.invalid path accessed.
+
+Programming errors
+Bugs that we developers introduce into our code.Difficult to find and handle.eg using req.query instead of req.body
+
+So, all we have to do is to write
+
+a global express error handling middleware
+
+which will then catch errors coming
+
+from all over the application.
+
+So, no matter if it's an error coming from a route handler,
+
+or a model validator or really, someplace else,
+
+the goal is that all these errors end up
+
+in one central error handling middleware.
+
+So that we can send a nice response back to the client
+
+letting them know what happened.
+
+And so, really, handling in this case just means
+
+sending a response letting the user know what happened.
+
+in app.js
+app.use((err, req, res, next) => {
+    
+})
+passing 4 parameters express automatically knows it is error middleware
+
+Error is built in error class.
+
+*******************************
+Okay, and finally I actually also want
+
+to export this middleware here, okay?
+
+So basically, this handler
+
+because throughout the rest of the section,
+
+we're gonna build a couple of different
+
+functions for handling with different types of errors,
+
+and so I want all of these functions
+
+to be all in the same file, all right?
+
+And we can say that all of these functions
+
+that I just mentioned are handlers, okay,
+
+and so handlers, we also call them controllers
+
+in the context of the MVC architecture,
+
+and so let's now actually create
+
+an error controller file in our controller folder.
+
+Okay, and this might sound or look a bit weird
+
+because we actually do not have an error resource
+
+okay, and so probably some people are gonna disagree
+
+with me that this is the correct place,
+
+but I personally like to do it like this
+
+because at the end of the day,
+
+these functions, they kinda are like
+
+really for controlling our errors, all right.
+****************************************************************
+
+ Catching Errors in Async Functions
+
+ removing try catch blocks
+
+ ///Adding 404 errors for id that is not found instead of returning NULL tour 
+ next(..) next will call up the gloabal error middleware
+
+ ****prod errors and dev errors**
+ now prob is we are sending same errors in prod and dev but in prod we want to leak very little info abt errors to user.
+ so
+  if (process.env.NODE_ENV === 'development') {
+        res.status(err.statusCode).json({
+            status: err.status,
+            error: err,
+            message: err.message,
+            stack: err.stack
+        });
+    } else if (process.env.NODE_ENV === 'production') {
+        res.status(err.statusCode).json({
+            error: err,
+            message: err.message
+
+        });
+    }
+
+now to make it cleaner seperate functions for dev and prod
+we basically only want operational errors send to client in production and not programming erros etc
+
+There are 3 types of errors created by mongoose we need to mark them operational to send meaningful error msgs back to the client.
+invalid id 127.0.0.1:3000/api/v1/tours/awwwww like this 
+posting tour ->duplicate key error (same tour already exists)
+validation errors (like trying to update fields and failing validation errors)
+
+so first is casterrors
+   "stringValue": "\"awwwww\"",
+        "valueType": "string",
+        "kind": "ObjectId",
+        "value": "awwwww",
+        "path": "_id",
+        "reason": {},
+        "name": "CastError",
+        "message": "Cast to ObjectId failed for value \"awwwww\" (type string) at path \"_id\" for model \"Tour\""
+    },
+    "message": "Cast to ObjectId failed for value \"awwwww\" (type string) at path \"_id\" for model \"Tour\"",
+    "stack": "CastError: Cast to ObjectId failed for value \"awwwww\" (type string) at path \"_id\" for model \"Tour\"\n    at model.Query.exec (C:\\Users\\SRISHTI\\Desktop\\Tour-and-Travel\\node_modules\\mongoose\\lib\\query.js:4498:21)\n    at model.Query.Query.then (C:\\Users\\SRISHTI\\Desktop\\Tour-and-Travel\\node_modules\\mongoose\\lib\\query.js:4592:15)\n    at processTicksAndRejections (internal/process/task_queues.js:95:5)"
+
+    this is the error we get
+
+    we hv handled operationl asynchronous errors in global middleware
+    unhandled errors->mongodb connection
+    process.on('unhandledRejection', err => {
+    console.log('UNHANDLED REJECTION! 💥 Shutting down...');
+    console.log(err.name, err.message);
+    //we first close the server and then callback function (server.close() we give time to server to handle pending requests before closing )
+    server.close(() => {
+        process.exit(1);
+    });
+});
+
+
+UNCAUGHT EXCEPTIONS
