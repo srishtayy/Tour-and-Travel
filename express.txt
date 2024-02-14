@@ -952,4 +952,91 @@ so first is casterrors
 });
 
 
-UNCAUGHT EXCEPTIONS:
+
+Password Encryption:->
+has to do with the data should be done in models only
+we will use  mongoose pre save middleware which is a document middleware
+
+//betweeen getting data and saving it we will manipulate/encrypt data
+userSchema.pre('save', async function (next) {
+    // Only run this function if password was actually modified(we only want to modify password if it is changed)
+    if (!this.isModified('password')) return next();
+
+    // Hash the password with cost of 12
+    this.password = await bcrypt.hash(this.password, 12);
+
+    // Delete passwordConfirm field
+    this.passwordConfirm = undefined;
+    next();
+});
+
+So this hash here is actually the asynchronous version,
+
+but there also is a synchronous version.
+
+But as you already know, we do not want to use
+
+the synchronous version because
+
+that will block the event loop and then prevent other users
+
+from using the application.
+
+So just like we learned in the beginning.
+
+And so of course we want to use
+
+the asynchronous version which is this one.
+
+And this will then return a promise
+
+and that promise, of course, we need to await.
+
+And so, we need to use await and then say that this function
+
+is an async function, just like this.
+
+So, let's recap that here.
+
+So, we want to set our current password
+
+basically to encrypt this version of the original password
+
+with a cost of 12, not to make it too easy
+
+to break the password, but also not to make the application
+
+take too long for encrypting the password, all right?
+
+So with this, we encrypted our password
+
+and now in the end, what we need to do
+
+is to basically delete the confirm password, all right?
+
+Because at this point in time,
+
+we only have the real password hashed, right?
+
+So, this dot password confirm,
+
+So, this dot password confirm,
+
+and how we basically delete the field,
+
+so not to be persisted in the database
+
+is to set it to undefined.
+
+All right?
+
+So, we really only need this password confirm here
+
+for the validation that we implemented before.
+
+So just to make sure that the user
+
+actually inputted two equal passwords
+
+so that he doesn't make any mistakes with his password.
+
