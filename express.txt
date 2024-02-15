@@ -1254,3 +1254,51 @@ and so that's actually what we're gonna do
 in the next lecture,
 so next up, we will actually log in users,
 based on their email address and their password.
+
+***LOGGING USERS***
+
+And just like before, the concept of logging a user in basically means to sign a JSON web token
+and send it back to the client.
+But in this case we only issue the token
+in case that the user actually exists,
+and that the password is correct.
+So, let's start to implement that.
+Exports.login is...request, responds, and next.
+
+we don't want passwords to show up so select=false;
+
+now we want to see second cond for logging that input password should match so first we select +password because we were hiding it now we get password in encrypted form but input pass is diff so how to match for that we make a function in user model
+So for the first time now we're gonna create something
+
+called an instance method.
+
+So an instance method is basically a method
+
+that is gonna be available on all documents
+
+of a certain collection, okay?
+
+And it works like this.
+
+So again, it's defined on a userSchema,
+
+and then we say methods, and now in this case
+
+we want to call the function correctPassword, all right?
+
+So let's simply call this here correct,
+
+and now remember that the function that we just defined
+
+is an instanced method.
+
+And so therefore it is available on all the user documents.
+
+And so this variable here right now  const user = await User.findOne({ email }).select('+password');
+
+is a user document, right?
+
+Because it's a result of querying the user model.
+
+user.correctPassword(password, user.password)
+above function is asynchronous so we await it also we cannot call this before checking if user exists or not
