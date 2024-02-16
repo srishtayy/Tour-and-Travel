@@ -18,6 +18,12 @@ const handleValidationErrorDB = err => {
     const message = `Invalid input data. ${errors.join('. ')}`;
     return new AppError(message, 400);
 };
+const handleJSONWebTokenError = () =>
+    new AppError('Invalid token. Please log in again!', 401);
+
+const handleJWTExpiredError = () =>
+    new AppError('Your token has expired! Please log in again.', 401);
+
 const sendErrorDev = (err, res) => {
     res.status(err.statusCode).json({
         status: err.status,
@@ -58,11 +64,26 @@ module.exports = (err, req, res, next) => {
     } else if (process.env.NODE_ENV === 'production') {
         let error = { ...err };
 
-        if (error.name === 'CastError') error = handleCastErrorDB(error);
-        if (error.code === 11000) error = handleDuplicateFieldsDB(error);
-        if (error.name === 'ValidationError')
-            error = handleValidationErrorDB(error);
+        // When we deconstruct our "err" object we have not "message" property in "error"
+        // but i don't know that why we are not getting message property on "error" from above         
+        //line of code
 
+        error.message = err.message; // i just add this line of code in errorController.js
+
+        if (error.name === 'CastError') {
+
+            error = handleCastErrorDB(error)
+
+        }
+        if (error.code === 11000) {
+            error = handleDuplicateFieldsDB(error);
+        }
+        if (error.name === 'ValidationError') {
+
+            error = handleValidationErrorDB(error);
+        }
+        if (error.name === 'JsonWebTokenError') error = handleJSONWebTokenError();
+        if (error.name === 'TokenExpiredError') error = handleJWTExpiredError();
         sendErrorProd(error, res);
     }
 

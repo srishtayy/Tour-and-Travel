@@ -1302,3 +1302,67 @@ Because it's a result of querying the user model.
 
 user.correctPassword(password, user.password)
 above function is asynchronous so we await it also we cannot call this before checking if user exists or not
+
+
+***GIVING ACCESS TO PROTECTED ROUTES***
+so for this purpose we make authcontroller.protect function
+and in tour routes we in getAllTours method we pass first arg as authcontroller.protect so 
+
+And so right now this middleware function is gonna run first
+
+and again, if the user is not authenticated
+
+then there will be an error.
+
+And of course then the next middleware
+
+so the one which actually gets
+
+and sends all of the tours will then not be executed.
+
+Okay.
+
+And so again, this will effectively protect the access
+
+to this resource here from users that are not logged in.
+
+So basically getting the token
+
+and then check if it actually exists.
+
+first step->
+// 1) Getting token and check if it's there
+
+So a common practice is to send a token using an http header
+with the request, okay?
+So let's take a look at how we can set headers in Postman
+to send him along with the request
+and then also how we can get access
+to these headers in Express.
+
+we need to follow a standard to pass json web token as header
+Use header called Authorization value should start with Bearer..... where ... is the value of token
+
+so now u can't access 127.0.0.1:3000/api/v1/tours this url without passing the header because of that middleware
+
+second step-->
+
+ // 2) Verification token
+ we call jwt.verify(token,process.env.JWT_SECRET) this is an asynchronous function that requires a callback so it will verify the token and then call the callback function
+ since we only use promise method from util package we can destructure and write const { promisify } = require('util');
+
+ now we need to add 2 more verification lets say user has been deleted so the token is invalid now 
+ it is easy can see from the code
+
+ lets say if pass changed by user then we need to make changes we add new field called passwordchangedAt
+ now to see both JWTTimestamp and passwordchangedAt to see how can we compare the fields
+ lets post (signup)
+ {
+    "name":"jonas",
+    "email":"three@jonas.io",
+    "password":"password3",
+    "passwordConfirm":"password3",
+    "passwordChangedAt":"2014-04-30"
+} this dummy data to see
+
+ADVANCED POSTMAN SETUP
