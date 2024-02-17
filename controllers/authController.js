@@ -12,12 +12,7 @@ const AppError = require('./../utils/appError');
 // };
 
 exports.signup = catchAsync(async (req, res, next) => {
-    const newUser = await User.create({
-        name: req.body.name,
-        email: req.body.email,
-        password: req.body.password,
-        passwordConfirm: req.body.passwordConfirm
-    });
+    const newUser = await User.create(req.body);
 
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRES_IN,
@@ -103,3 +98,15 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.user = currentUser; //putting userData on the request
     next();
 });
+exports.restrictTo = (...roles) => {
+    return (req, res, next) => {
+        // roles ['admin', 'lead-guide']. role='user'
+        if (!roles.includes(req.user.role)) {
+            return next(
+                new AppError('You do not have permission to perform this action', 403)
+            );
+        }
+
+        next();
+    };
+};

@@ -1366,3 +1366,20 @@ second step-->
 } this dummy data to see
 
 ADVANCED POSTMAN SETUP
+Create a variable dev.
+
+**AUTOMATING THE TOKEN PROCESS**
+go to tests in postman
+creating environment for token that we receive
+set an environment variable 
+pm.environment.set("variable_key", "variable_value");
+pm.environment.set("jwt", pm.response.json().token);
+modify it to this in signup and login requests 
+and also after creating 2 env dev:tours and prod:tours 
+specify url variable and value should be the url
+now modify the URL on postman
+{{URL}}api/v1/tours
+Also in getAlltours request select Bearer token in authorization and in token write {{jwt}}
+process automated
+
+nowww specify jwt variable in delete tour as well
