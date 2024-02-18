@@ -1428,3 +1428,9 @@ userSchema.pre('save', async function (next) {
     this.passwordConfirm = undefined;
     next();
 });
+
+updating user password of a logged in user without having to do forget password
+so in the route we will also call .protect middleware because it will add user to request
+
+now to test function login jwt variable stores the token now update password go to authorization and put {{jwt}} for authentication purposes.
+basically store the vtest part
