@@ -1382,4 +1382,49 @@ now modify the URL on postman
 Also in getAlltours request select Bearer token in authorization and in token write {{jwt}}
 process automated
 
+***DELETE TOUR***
 nowww specify jwt variable in delete tour as well
+
+***RESET PASSWORD***
+You just have to provide your email address and you will then get an email with a link where you can click and then that's gonna take you to a page where you can put in a new password.This is a very standard procedure and so this is also how we're going to implement it here in this application.Basically there are two steps.For the first one is that the user sends a post request to a forgot password route, only with this email address.This will then create a reset token and sent that to the email address that was provided.Just a simple, random token, not a JSON Web Token.That's a difference here.
+Then in the second part, which is gonna be the next video,the user then sends that token from his email along with a new password in order to update his password.Basically, we will have exports dot forgot password which is the first step.
+So request, response and next and then as a second step, we have reset password.Then let's also go ahead and implement these two routes.
+***SENDING EMAIL WITH NODEMAILER***
+
+if email
+const sendEmail = async options => {
+    // 1) Create a transporter
+    const transporter = nodemailer.createTransport({
+        //service:"Gmail" and auth for using gmail
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        auth: {
+            user: process.env.EMAIL_USERNAME,
+            pass: process.env.EMAIL_PASSWORD
+        }
+    });
+why we not using email??
+here we using mailtrap 
+will fake to send emails to client but these emails won't be sending to clients will be trapped in mailtrap
+
+sign up to mailtrap signup create an inbox open inbox to see credentials
+so ater completing the code we get msg token sent to mail but actually mail is not sent to jonas.io it gets trapped in mailtrap
+if we open and check the mail trap we can see the mail.
+we get a nice url resetURL saying valid for 10mins if we refersh database we can see resettoken
+
+we use .save() and not update because of validators
+so after forgetpasswd we get a token
+we specify it in resetpasswd url and also in tests we copy the code taht we did in signup because restpasswd gives us jwt token
+so after forgetpswd and resetpasswd url we get success and a jwt token now we can run the get all tours url to check if jwt token is  a valid token
+
+userSchema.pre('save', async function (next) {
+    // Only run this function if password was actually modified(we only want to modify password if it is changed)
+    if (!this.isModified('password')) return next();
+
+    // Hash the password with cost of 12
+    this.password = await bcrypt.hash(this.password, 12);
+
+    // Delete passwordConfirm field
+    this.passwordConfirm = undefined;
+    next();
+});
