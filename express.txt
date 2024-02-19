@@ -1434,3 +1434,5 @@ so in the route we will also call .protect middleware because it will add user t
 
 now to test function login jwt variable stores the token now update password go to authorization and put {{jwt}} for authentication purposes.
 basically store the vtest part
+
+now for updating user Data we have made a new route and in user controller new function now after loggin in for a user/or signing up for a user, we then go to this updateme url which is for updating user data and it will automatically update for logged in user.
