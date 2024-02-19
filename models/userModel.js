@@ -66,6 +66,13 @@ userSchema.pre('save', function (next) {
     //the svaing to database is a bit slow process so this Date.now() may occur a little late so we subtract 1s
     next();
 });
+userSchema.pre(/^find/, function (next) {
+    // this points to the current query
+    this.find({ active: { $ne: false } });
+    //active:true doesn't work because perhaps if active is not explicitly set to true, so we use above way
+    //but if it works can use active:true too
+    next();
+});
 userSchema.methods.correctPassword = async function (
     candidatePassword,
     userPassword
