@@ -1681,9 +1681,11 @@ each location will have few tours few to few relationship
 two way referencing
 denormalize them because few only embed locations in tours bec they closely related since without tour no locations
 
+tour->guide
 relation between users and tour via tour guide since tour guide is a user
 few to few -->
-2 ways can refrencing or embedding (child referencing)
+2 ways--> can refrencing or embedding (child referencing we will do)
+few so array of ids of guides
 
 new dataset bookings (bookings connect users and tours)
 one user can have many bookings but one booking only to one user similar for tours 
@@ -1721,3 +1723,18 @@ also we will delete prev data since not correctly formatted
 node ./dev-data/data/import-dev-data.js --delete
 and will import from tours.json now 
 node ./dev-data/data/import-dev-data.js --import
+
+
+implementing child referncing tour->guides 
+so an array of ids of guides is passed now these ids must be used to get guides so pre save middleware
+
+tourSchema.pre('save', async function (next) {
+    const guidesPromises = this.guides.map(async id => await User.findById(id)); //array of promises
+    this.guides = await Promise.all(guidesPromises);
+    next();
+});
+
+but this middleware will only work for save not for update but if we implement update middleware it will be too much of work because we then will also have to update tours with guides so instead of using simple as array of ids we will use
+
+child-referncing
+
