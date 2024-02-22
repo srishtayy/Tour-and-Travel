@@ -1614,3 +1614,110 @@ because it won't really allow any
 crazy stuff to go into our database,
 
 as long as we use it correctly.
+
+***MONGO DB DATA MODELLING***
+
+Taking unstructures data and structuring into logical data model,establishing relationships between some of the datasets.
+most demanding part not straightforward.
+
+1)identify relationships between data
+2)referencing/normalization vs embedding/normalization
+3)embedding or referencing documents
+4)types of referencing
+
+types of relationships 
+one to one relationship
+one to many relationships (one to few,one to many,one to ton)
+many to many relationships
+
+Referencing vs Embedding
+
+referenced/normalized means that the data is nicely seperated and referencing between data done using ids
+eg movie has array actors which contain ids of actors , actors are seperate documents
+this is known as child referencing.
+
+in relational databases, data is stored in normalized form but in non-relational database we can denormalize data by embedding related documents into main documents,thus we will have one main document containing all related data thus our application will need to make fewer queries to database thus improving the performance.however in this case it is impossible to query the embedding on its own.
+
+when to embed when to reference?
+
+1)relation type
+usually when we have one to few relationship we will embed,we can do it in one to many
+for one to ton,many to many we use reference bec in this case we make the document very large way beyond the max size
+
+2)data access patterns
+embedding:high read/write ratio
+referencing:low read/write ratio(data is mostly updated)
+
+3)data closeness
+embedding:datasets really belong together eg user and his multiple emails
+referencing:we frequently need to query both datasets
+
+
+Types of referencing:
+
+Child referencing->
+eg movie-actors
+we keep child references in parent document these references are stored in the array.
+but avoid this document for large ids array 
+one to few, this array should not be indefinitely large
+
+Parent referencing->
+in child document we keep refernce to parent document
+no array in this case so 
+one to ton
+
+Two way referencing->
+both reference
+
+users->reviews(one to many)
+we will model it using parent referencing revire keep a reference of user, bec we don't want array to be large
+
+tour->reviews(one to many)
+parent referencing(one tour many reviews)
+
+tours->location
+each tour will have few locations
+each location will have few tours few to few relationship
+two way referencing
+denormalize them because few only embed locations in tours bec they closely related since without tour no locations
+
+relation between users and tour via tour guide since tour guide is a user
+few to few -->
+2 ways can refrencing or embedding (child referencing)
+
+new dataset bookings (bookings connect users and tours)
+one user can have many bookings but one booking only to one user similar for tours 
+users->bookings (parent referencing)
+tours->bookings(parent referencing)
+
+***GEOSPATIAL DATA***
+
+Now, remember from the previous lecture
+that our location data will actually be embedded
+into the tours.
+And so therefore, we're basically gonna declare
+everything that is related to locations
+in our tour model.
+All right, so let's open that one up and right at the end,
+let's start by adding the startLocation.
+Okay, so we will have startLocation
+and then also, locations in general.
+Now, MongoDB supports geospatial data out of the box.
+And geospatial data is basically data that describes
+places on earth using longitude and latitude coordinates.
+Okay, so we can describe simple points
+or we can also describe more complex geometries
+like lines or even polygons or even multi-polygons.
+So really, everything is possible
+with geospatial data in MongoDB.
+Okay, so let's add our startLocation field here
+and then let's actually implement this geospatial data.
+And MongoDB uses a special data format called GeoJSON.
+All right, so.
+GeoJSON, in order to specify geospatial data.
+
+
+also we will delete prev data since not correctly formatted 
+node ./dev-data/data/import-dev-data.js --delete
+and will import from tours.json now 
+node ./dev-data/data/import-dev-data.js --import
