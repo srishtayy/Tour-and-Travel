@@ -7,27 +7,53 @@ const sendEmail = require('./../utils/email');
 const crypto = require('crypto');
 
 
-// const signToken = id => {
-//     return jwt.sign({ id }, process.env.JWT_SECRET, {
-//         expiresIn: process.env.JWT_EXPIRES_IN
-//     });
-// };
 
-exports.signup = catchAsync(async (req, res, next) => {
-    const newUser = await User.create(req.body);
-
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+const signToken = id => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRES_IN,
         algorithm: 'HS256'
     });
+};
 
-    res.status(201).json({
+const createSendToken = (user, statusCode, res) => {
+    const token = signToken(user._id);
+    const cookieOptions = {
+        expires: new Date(
+            Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+        ),
+        httpOnly: true
+    };
+    if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+
+    res.cookie('jwt', token, cookieOptions);
+
+    // Remove password from output (after signup we get output to remove from it)
+    user.password = undefined;
+
+    res.status(statusCode).json({
         status: 'success',
         token,
         data: {
-            user: newUser
+            user
         }
     });
+};
+exports.signup = catchAsync(async (req, res, next) => {
+    const newUser = await User.create(req.body);
+
+    // const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+    //     expiresIn: process.env.JWT_EXPIRES_IN,
+    //     algorithm: 'HS256'
+    // });
+
+    // res.status(201).json({
+    //     status: 'success',
+    //     token,
+    //     data: {
+    //         user: newUser
+    //     }
+    // });
+    createSendToken(newUser, 201, res);
 });
 exports.login = catchAsync(async (req, res, next) => {
     const { email, password } = req.body;
@@ -45,14 +71,15 @@ exports.login = catchAsync(async (req, res, next) => {
     }
 
     // 3) If everything ok, send token to client
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRES_IN,
-        algorithm: 'HS256'
-    });
-    res.status(200).json({
-        status: 'success',
-        token
-    });
+    // const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    //     expiresIn: process.env.JWT_EXPIRES_IN,
+    //     algorithm: 'HS256'
+    // });
+    // res.status(200).json({
+    //     status: 'success',
+    //     token
+    // });
+    createSendToken(user, 200, res);
 });
 exports.protect = catchAsync(async (req, res, next) => {
     // 1) Getting token and check if it's there
@@ -180,14 +207,15 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 
     // 3) Update changedPasswordAt property for the user
     // 4) Log the user in, send JWT
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRES_IN,
-        algorithm: 'HS256'
-    });
-    res.status(200).json({
-        status: 'success',
-        token
-    });
+    // const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    //     expiresIn: process.env.JWT_EXPIRES_IN,
+    //     algorithm: 'HS256'
+    // });
+    // res.status(200).json({
+    //     status: 'success',
+    //     token
+    // });
+    createSendToken(user, 200, res);
 });
 exports.updatePassword = catchAsync(async (req, res, next) => {
     // 1) Get user from collection
@@ -205,12 +233,14 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
     // User.findByIdAndUpdate will NOT work as intended! no middlewares would happen only on save
 
     // 4) Log user in, send JWT
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRES_IN,
-        algorithm: 'HS256'
-    });
-    res.status(200).json({
-        status: 'success',
-        token
-    });
+    // const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    //     expiresIn: process.env.JWT_EXPIRES_IN,
+    //     algorithm: 'HS256'
+    // });
+
+    createSendToken(user, 200, res);
+    // res.status(200).json({
+    //     status: 'success',
+    //     token
+    // });
 });

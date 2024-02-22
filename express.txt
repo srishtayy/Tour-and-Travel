@@ -1441,3 +1441,176 @@ now for updating user Data we have made a new route and in user controller new f
 similarly implement deleteusers we select the active field to false because we don't want users to se it (getAllUsers)
 now in getAllUsers we only want to show the active users.
 for thsi we can use query middleware
+
+**SECURITY BEST PRACTISES**
+we have encrypted passwords and password reset tokens.
+
+Brute force attack:->
+attacker tries to guess the password randomly by trying random paswords until right one 
+solution->
+1)we can make the login request slow (bcrypt package does it )
+2)Rate-Limiting->we can limit the number of requests from a single IP
+3)Implement maximum login attempts (after 10 failed attempts the user would have to wait for sometime to try logging again)
+
+
+Cross-Site Scrypting attack:->
+attacker tries to inject scripts into our page to run mailcious code,
+On the clients' side, this is especially dangerous
+because it allows the attacker to read the local storage,which is the reason why we should
+never ever store the JSON web token in local storage.Instead, it should be stored in an HTTP-only cookie
+that makes it so that the browser can only receive and send the cookie
+but cannot access or modify it in any way.
+
+And so, that then makes it impossible for any attacker to steal the JSON web token that is stored in the cookie.
+
+Solution->
+
+Store JWT in Http-only cookie
+Sanitize your userInput Data 
+Set special HTTP headers(helmet package)
+
+Denial-of-service-attacks
+It happens when the attacker sends
+so many requests to a server that it breaks down
+and the application becomes unavailable.
+
+Solution->
+1)Implement rate-limiting
+2)Limit body payload (in body-parser)
+    Also, we should limit the amount of data
+    that can be sent in a body in a post or a patch request.
+3)Avoid evil regular expressions
+    And these are just regular expressions that take
+    an exponential time to run for non-matching inputs and
+    they can be exploited to bring our entire application down.
+
+NOSQL QUERY INJECTION ATTACK:
+
+And query injection happens when an attacker,
+instead of inputting valid data, injects some query
+in order to create query expressions
+that are gonna translate to true.
+For example, to be logged in even without
+providing a valid username or password.
+
+solution->
+But what you need to know is that using Mongoose is actually a pretty good strategy
+for preventing these kind of attacks because a good schema forces each value
+to have a well-defined data tab.Which then effectively makes this type of attack very difficult to execute.
+However, it's always a good idea to still sanitize input data, just to be sure.
+
+Some best practises
+
+1)is that in a production application,
+all communication between server and client
+needs to happen over HTTPS.Otherwise, anyone can listen into the conversation
+and steal our JSON web token.
+
+2)Next, always create random password tokens.
+Not generated from dates or something like that.
+Because they are effectively passwords
+and so, they should be treated as such.
+
+3)Plus, always give them expiry dates.
+
+4)And we also implemented that a certain JSON web token
+is no longer valid after the user has changed his password.
+So, we basically revoke the token as soon as the user changes the password.
+
+5)Another big thing is to never ever commit
+a configuration file, like for environment variables,
+to a version control like Git.
+
+6)Do not send entire error to client we don't want to give our details
+
+**THINGS WE CAN IMPLEMENT BUT HAVE NOT YET IMPLEMENTED**
+
+7)Next up, we can use the csurf package
+to fight a type of attack called Cross-Site Request Forgery,
+which is an attack that forces a user
+to execute unwanted actions on a web application
+in which they are currently logged in. (we have not done it in the application though)
+
+8)Next, we could require the user to
+re-authenticate before performing a high-value action.
+For example, making a payment or deleting something.
+Again, this is just a suggestion
+that you can try out for yourself.
+
+9)Another cool feature that you can implement
+is a blacklist of untrusted tokens.
+So, we already know that there is not really
+a way to log users out of the application
+if they show some malicious activity.
+But what we can do is to create a list of untrusted tokens
+that are then validated on each request.
+
+10)And next up, a feature that we could have implemented is to
+confirm the email address after an account is first created.
+So, basically by sending a link to the user's email,
+like many real apps actually do.
+
+11)And finally, the last one
+that we could have implemented is two-factor authentication,
+which I'm sure you're familiar with.Basically, with two-factor authentication,after logging into the application,
+the user needs to perform a second action to really get authenticated.
+And typically, that is to insert a code sent via text message to a mobile phone.So, these are a lot of functionalities
+our authentication could have.
+
+12)And just to finish, something that we will implement
+in the rest of the section is
+to prevent parameter pollution.
+For example, try to just insert two field parameters
+into the query string that searches for all tours.
+And if you do that, you will find that
+there will be an error because
+our application is not prepared for that.
+And so, attackers try to use these kinds of weaknesses
+to crash applications, which is, of course, not good.
+
+
+***SENDING JWT VIA COOKIE***
+
+***IMPLEMENT RATE-LIMITING***
+
+rate-limiting can be implemented as global middleware
+
+***setting up security headers***
+
+***DATA SANITIZATION***
+
+data sanitization is very important
+suppose someone who knows the password but not the email can also try logging in 
+it can write
+'email':{"$gt":""},
+'password':'pass1234'
+
+and our code will login the person
+
+***XSS***
+
+app.use(xss)
+
+Imagine that an attacker would try to insert
+
+some malicious HTML code with some
+
+JavaScript code attached to it.
+
+If that would then later be injected into our HTML site,
+
+it could really create some damage then.
+
+Using this middleware, we prevent that
+
+basically by converting all these HTML symbols.
+
+As I said before, the Mongoose validation itself
+
+is actually already a very good protection against XSS,
+
+because it won't really allow any
+
+crazy stuff to go into our database,
+
+as long as we use it correctly.
