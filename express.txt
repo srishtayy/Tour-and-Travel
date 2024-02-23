@@ -1751,3 +1751,13 @@ exports.getTour = catchAsync(async (req, res, next) => {
 
     ....
 but the same u have to don in getAllTours but this is repetitive code so instead of repetitions we can use query middleware.
+
+***REVIEWS***
+creating a review later we will pick up user from the logged in id
+{
+    "review":"Amazing tour",
+    "rating":5,
+    "tour":"5c88fa8cf4afda39709c2955",
+    "user":"65cf57da3cd0606524d6cc38"
+
+}
