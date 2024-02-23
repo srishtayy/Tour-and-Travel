@@ -151,6 +151,14 @@ tourSchema.post(/^find/, function (docs, next) {
     // console.log(docs);
     next();
 });
+tourSchema.pre(/^find/, function (next) {
+    this.populate({
+        path: 'guides',
+        select: '-__v -passwordChangedAt'
+    });
+
+    next();
+});
 
 //AGGREGATION MIDDLEWARE
 tourSchema.pre('aggregate', function (next) {

@@ -1735,6 +1735,19 @@ tourSchema.pre('save', async function (next) {
 });
 
 but this middleware will only work for save not for update but if we implement update middleware it will be too much of work because we then will also have to update tours with guides so instead of using simple as array of ids we will use
+lets say tour guide changes as email then if a tour has that guide then we will also have to change the tours as well.
+so we won't use embedding rather child-referncing
 
-child-referncing
+now we will also display info of guide along with tours
+one way
+exports.getTour = catchAsync(async (req, res, next) => {
+    console.log(req.params)
 
+
+    const tour = await Tour.findById(req.params.id).populate({
+        path: 'guides',
+        select: '-__v -passwordChangedAt' //for removing these fields in the outout of guides of tour
+    });
+
+    ....
+but the same u have to don in getAllTours but this is repetitive code so instead of repetitions we can use query middleware.
