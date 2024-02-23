@@ -1761,3 +1761,9 @@ creating a review later we will pick up user from the logged in id
     "user":"65cf57da3cd0606524d6cc38"
 
 }
+
+now here is the problem we are using parent referencing where tour is the parent and has no information about the child.
+but we want to populate review into tours,
+so we use virtual populate.(we won't persist to database)
+
+2 populates were inefficient so we did only one and virtual 

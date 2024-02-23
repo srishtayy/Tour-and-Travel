@@ -44,10 +44,7 @@ exports.getTour = catchAsync(async (req, res, next) => {
     console.log(req.params)
 
 
-    const tour = await Tour.findById(req.params.id).populate({
-        path: 'guides',
-        select: '-__v -passwordChangedAt' //for removing these fields in the outout of guides of tour
-    });
+    const tour = await Tour.findById(req.params.id).populate('reviews');
     // Tour.findOne({ _id: req.params.id })
     // const tour = tours.find(el => el.id === id)
 
