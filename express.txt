@@ -1767,3 +1767,6 @@ but we want to populate review into tours,
 so we use virtual populate.(we won't persist to database)
 
 2 populates were inefficient so we did only one and virtual 
+****nested routes***
+now we want to post a review to current tour and current logged in user on a route like
+/tour/id/reviews
