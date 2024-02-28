@@ -114,6 +114,14 @@ const tourSchema = new mongoose.Schema({
     }
 
 );
+// tourSchema.index({ price: 1 });
+//1 for ascending data -1 for descending,we can again check using .explain() how many docs scanned
+//we need to delete these indexes from database incase we want to remove them
+
+tourSchema.index({ price: 1, ratingsAverage: -1 });
+tourSchema.index({ slug: 1 });
+tourSchema.index({ startLocation: '2dsphere' });
+
 tourSchema.virtual('durationWeeks').get(function () {
     return this.duration / 7;
 });

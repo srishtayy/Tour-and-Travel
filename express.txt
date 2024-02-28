@@ -1770,3 +1770,19 @@ so we use virtual populate.(we won't persist to database)
 ****nested routes***
 now we want to post a review to current tour and current logged in user on a route like
 /tour/id/reviews
+
+**improving read performance using indexes***
+for any filter query like price etc the mongodb has to examine or scan all the documents which is not efficient at all.
+mongodb creates ban index for id by default.
+when we are querying by index monodb only lookls at the ordered list of bthose indexes instead of searching
+every document one by one.
+
+we made name unique mongoose creates a unique index for name field.
+index with one field -> single index
+inde3x with 2 fields-> compound index
+
+but size of indexes is large bec we are working on large scale.
+HOw do we decide which field to choose as index?
+
+we need to study the access patterns of our field.for eg we know ppl won't query
+for group size.

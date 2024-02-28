@@ -77,7 +77,7 @@ exports.getAll = Model =>
             .sort()
             .limitFields()
             .paginate();
-        // const doc = await features.query.explain();
+        // const doc = await features.query.explain(); it will give query statistics how many docs scanned etc
         const doc = await features.query;
 
         // SEND RESPONSE
