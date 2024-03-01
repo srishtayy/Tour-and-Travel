@@ -85,12 +85,27 @@ reviewSchema.statics.calcAverageRatings = async function(tourId) {
   });
   
   // findByIdAndUpdate
-  // findByIdAndDelete
+  // findByIdAndDelete for updating and deleting
+  // this usually refers to the query object. This object represents the criteria for selecting or updating documents.
   reviewSchema.pre(/^findOneAnd/, async function(next) {
     this.r = await this.findOne();
     // console.log(this.r);
     next();
   });
+  // Here, this refers to the query object, and you can use this.findOne() to 
+  // retrieve the document before the actual findOneAnd... operation takes place. 
+  // This is because the pre middleware is executed before the database operation.
+
+  reviewSchema.post(/^findOneAnd/, async function() {
+    // await this.findOne(); does NOT work here, query has already executed
+    await this.r.constructor.calcAverageRatings(this.r.tour);
+  });
+
+  // In the post middleware, this refers to the result of the query, not the query itself. 
+  // The query has already been executed, and this now represents the result of the operation,
+  // which might not contain the full document details. This is why you use this.r in the post 
+  // middleware, as you stored the document in the r property during the pre middleware.
+
 const Review = mongoose.model('Review', reviewSchema);
 
 module.exports = Review;
